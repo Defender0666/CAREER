@@ -1,3 +1,19 @@
 {
-  "name":"CareerOS Ultimate","short_name":"CareerOS","start_url":"/","display":"standalone","background_color":"#07111f","theme_color":"#07111f","description":"Your career operating system","icons":[]
+  "name": "CareerOS Ultimate",
+  "short_name": "CareerOS",
+  "description": "A privacy-first career operating system for skills, career planning, verified jobs, applications and responsible AI guidance.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#07111f",
+  "theme_color": "#07111f",
+  "lang": "en-IN",
+  "dir": "ltr",
+  "categories": ["business", "education", "productivity"],
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
 }
