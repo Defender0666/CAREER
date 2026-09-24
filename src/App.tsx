@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
-import { Activity, ArrowRight, BrainCircuit, BriefcaseBusiness, Check, FileText, Home, LogIn, LogOut, Menu, Search, Settings, ShieldCheck, Sparkles, Target, X } from 'lucide-react';
+import { Activity, ArrowRight, BrainCircuit, BriefcaseBusiness, Check, FileText, Home as HomeIcon, LogIn, LogOut, Menu, Search, Settings, ShieldCheck, Sparkles, Target, X } from 'lucide-react';
 import { careers, employers, jobSources, skills } from './data/catalog';
 import { signInWithPassword, signOut, signUpWithPassword, supabase } from './lib/supabase';
 import './styles.css';
@@ -8,7 +8,7 @@ type Tab = 'home'|'skills'|'careers'|'roadmap'|'resume'|'jobs'|'tracker'|'ai'|'p
 type Status = 'Saved'|'Applied'|'Interview'|'Offer'|'Rejected'|'Withdrawn';
 type Application = { id:string; company:string; role:string; status:Status; source:string; date:string; url?:string };
 type Job = { title:string; company:string; location:string; url:string; source:string; description?:string; postedAt?:string };
-const nav = [{id:'home',label:'Home',icon:Home},{id:'skills',label:'Skills',icon:Target},{id:'careers',label:'Career paths',icon:BriefcaseBusiness},{id:'roadmap',label:'AI roadmap',icon:BrainCircuit},{id:'resume',label:'AI & ATS resume',icon:FileText},{id:'jobs',label:'Live jobs',icon:Search},{id:'tracker',label:'Application tracker',icon:Activity},{id:'ai',label:'AI hub',icon:Sparkles},{id:'profile',label:'Profile & settings',icon:Settings}] as const;
+const nav = [{id:'home',label:'Home',icon:HomeIcon},{id:'skills',label:'Skills',icon:Target},{id:'careers',label:'Career paths',icon:BriefcaseBusiness},{id:'roadmap',label:'AI roadmap',icon:BrainCircuit},{id:'resume',label:'AI & ATS resume',icon:FileText},{id:'jobs',label:'Live jobs',icon:Search},{id:'tracker',label:'Application tracker',icon:Activity},{id:'ai',label:'AI hub',icon:Sparkles},{id:'profile',label:'Profile & settings',icon:Settings}] as const;
 const read = <T,>(key:string, fallback:T):T => { try { return JSON.parse(localStorage.getItem(key) || '') as T; } catch { return fallback; } };
 
 export default function App() {
