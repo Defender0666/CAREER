@@ -1,94 +1,61 @@
-# CareerOS Ultimate — production launch
+# Full deployment and provider configuration
 
-## Architecture
+## 1. Supabase database
+
+Open the supplied Supabase project and run `supabase/schema.sql` in the SQL Editor. This creates the tables, profile trigger, indexes and owner-only RLS policies.
+
+## 2. Deploy Edge Functions
+
+Install the Supabase CLI, then run from the repository root:
+
+```bash
+supabase login
+supabase link --project-ref kyrsdewrgqejoajhpfrn
+supabase functions deploy jobs
+supabase functions deploy ai
+```
+
+The `jobs` function now supports genuine results from Adzuna and JSearch. The `ai` function supports OpenAI first, then Gemini as a fallback. Neither function fabricates data or exposes provider keys to the browser.
+
+## 3. Configure real provider secrets
+
+Use secrets only in Supabase:
+
+```bash
+supabase secrets set ADZUNA_APP_ID=... ADZUNA_APP_KEY=... ADZUNA_COUNTRY=in
+supabase secrets set JSEARCH_API_KEY=... JSEARCH_API_HOST=jsearch.p.rapidapi.com
+supabase secrets set OPENAI_API_KEY=... OPENAI_MODEL=gpt-4o-mini
+supabase secrets set GEMINI_API_KEY=... GEMINI_MODEL=gemini-2.0-flash
+```
+
+Use only keys obtained from the providers. If no provider is configured, the app shows an honest empty state.
+
+## 4. Vercel
+
+Import `Defender0666/CAREER` into Vercel. The committed `vercel.json` sets the Vite build and `dist` output. Add these environment variables in Project Settings → Environment Variables:
 
 ```text
-PWA / Android WebView
-        |
-        | Supabase publishable key + user JWT
-        v
-Supabase Auth ---- Postgres + RLS
-        |                 |
-        |                 +-- profiles, user_skills, applications,
-        |                     roadmaps, resumes, ai_runs
-        v
-Supabase Edge Functions
-        |
-        +-- jobs: approved Adzuna/JSearch/provider adapters
-        +-- ai: server-side OpenAI/Gemini adapters
-        |
-        v
-External providers
-        +-- verified job APIs
-        +-- AI providers
+VITE_SUPABASE_URL=https://kyrsdewrgqejoajhpfrn.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=<the publishable key>
 ```
 
-The browser and APK may contain only the Supabase URL and publishable key. Service-role, AI, and job-provider secrets belong only in Edge Function secrets.
+Redeploy after saving variables. Never add service-role, AI, or job-provider secrets to Vercel client variables.
 
-## Capacitor APK
+## 5. Netlify
 
-Install prerequisites: Node.js 18+, JDK 17+, Android Studio, Android SDK and an Android signing keystore.
+Import the repository into Netlify. The committed `netlify.toml` configures `npm run build`, `dist`, and SPA fallback. Add the same two `VITE_` variables in Site configuration → Environment variables, then deploy.
 
-```bash
-npm install
-npm install @capacitor/core @capacitor/cli @capacitor/android
-npm run build
-npx cap add android
-npx cap sync android
-npx cap open android
+## 6. Custom domain and Auth
+
+In Vercel or Netlify, add your domain and follow the DNS records shown by the host. Wait for DNS verification and HTTPS issuance. Then in Supabase → Authentication → URL Configuration set:
+
+```text
+Site URL: https://your-real-domain.example
+Redirect URL: https://your-real-domain.example/**
 ```
 
-`capacitor.config.ts` sets the package ID to `com.maccycreations.careerosultimate`. In Android Studio, verify the package, app label, icons, splash screen, version code, version name and release signing configuration. Use **Build → Generate Signed Bundle / APK** for a release artifact.
+Replace the example with the domain you actually own. Add `http://localhost:5173/**` as an additional local-development redirect while testing.
 
-If the Android platform has already been created, use:
+## 7. Verify before launch
 
-```bash
-npm run build
-npx cap sync android
-npx cap open android
-```
-
-Do not use a remote development server in the release build. The app must load the local `dist` bundle and communicate with Supabase over HTTPS.
-
-## PWA icons
-
-Create real branded PNG files at:
-
-- `public/icons/icon-192.png`
-- `public/icons/icon-512.png`
-
-Do not ship placeholder or missing icons. Test installability in Chrome DevTools → Application → Manifest and Lighthouse.
-
-## Custom-domain checklist
-
-1. Select a production host such as Vercel, Netlify, Cloudflare Pages or a static HTTPS host.
-2. Add the custom domain in that host’s dashboard.
-3. Add the exact DNS records supplied by the host at your DNS provider.
-4. Wait for DNS verification and confirm automatic TLS/HTTPS is active.
-5. Configure the host’s SPA fallback so every application route serves `index.html`.
-6. Add the final HTTPS URL to Supabase Authentication → URL Configuration:
-   - Site URL: `https://your-domain.example`
-   - Redirect URL: `https://your-domain.example/**`
-7. Add the same production URL to any OAuth provider configuration if OAuth is enabled.
-8. Configure environment variables in the hosting provider; never commit `.env`.
-9. Confirm the service worker, manifest, icons and HTTPS installability.
-10. Add a real privacy policy, terms, contact page, account deletion flow and support address before public launch.
-11. Test deep links, sign-in redirects, offline shell, online sync, Edge Functions and Android navigation on the final domain.
-
-## Release verification
-
-```bash
-npm run build
-npm run preview
-```
-
-Verify:
-
-- no TypeScript or Vite build errors
-- no secrets in the generated `dist` bundle
-- Supabase Auth works with the production redirect URL
-- RLS blocks cross-user reads and writes
-- jobs return only provider responses or an explicit empty state
-- AI output clearly identifies provider and citations/grounding state
-- application changes persist offline and sync when online
-- APK is signed and uses HTTPS
+Test email signup/confirmation, login/logout, RLS isolation, job links opening at the original provider, AI provider attribution, empty provider states, offline shell, mobile layout, HTTPS, and service-worker updates. Do not advertise a production URL until DNS and HTTPS are verified.
