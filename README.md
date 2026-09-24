@@ -1,8 +1,8 @@
-# CareerOS Ultimate — production setup
+# CareerOS Ultimate — verified release baseline
 
-CareerOS Ultimate is a privacy-first PWA/Capacitor application for Saket Yadav and Maccy Creations. The browser bundle contains no privileged secrets and never invents jobs, salaries, employer information or AI citations.
+CareerOS Ultimate is a privacy-first PWA/Capacitor application for Saket Yadav and Maccy Creations. It supports browser/offline-first use with optional Supabase sync, authenticated AI providers, and server-side job-provider adapters.
 
-## Local setup
+## Run locally
 
 ```bash
 npm install
@@ -11,46 +11,40 @@ npm run dev
 npm run build
 ```
 
-The repository is preconfigured for the supplied Supabase project through the publishable-key environment variables in `.env.example`:
+The UI works without credentials using local storage. Supabase, live jobs, and AI features intentionally show a configuration state until their server-side providers are configured. The app does not fabricate jobs, career facts, salary information, or AI citations.
 
-```dotenv
-VITE_SUPABASE_URL=https://kyrsdewrgqejoajhpfrn.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_cAtn2dFn4QIv7BSCl7Vmmg_hmOz3jVd
-```
+## Supabase setup
 
-The publishable key is intended for browser use. Never put a Supabase service-role key, database password, AI key, or job-provider key in `.env`, source code, or the deployed browser bundle.
-
-## Supabase manual configuration
-
-1. Open the supplied Supabase project at `https://kyrsdewrgqejoajhpfrn.supabase.co`.
-2. Run `supabase/schema.sql` once in the Supabase SQL Editor.
-3. In Authentication → Providers, enable Email and configure confirmation/password-reset email settings.
-4. Add the local URL to Authentication → URL Configuration while developing:
-   - Site URL: `http://localhost:5173`
-   - Redirect URL: `http://localhost:5173/**`
-5. Deploy the Edge Functions from the repository:
+1. Open your Supabase project and run `supabase/schema.sql` in the SQL Editor.
+2. Enable Email authentication and configure confirmation/password reset URLs.
+3. Deploy the Edge Functions:
 
 ```bash
 supabase login
-supabase link --project-ref kyrsdewrgqejoajhpfrn
+supabase link --project-ref YOUR_PROJECT_REF
 supabase functions deploy jobs
 supabase functions deploy ai
 ```
 
-6. Configure privileged secrets only in the Supabase Edge Function environment:
+4. Set secrets only in Edge Functions, never in `.env` or the browser bundle:
 
 ```bash
 supabase secrets set ADZUNA_APP_ID=... ADZUNA_APP_KEY=... JSEARCH_API_KEY=...
 supabase secrets set OPENAI_API_KEY=... GEMINI_API_KEY=...
 ```
 
-7. Keep provider adapters limited to approved APIs and return an explicit empty state when a provider fails. Validate source URLs before displaying AI claims.
-8. Test signup, login, logout, RLS isolation, offline local storage, Edge Functions, and deleted-user access before production.
+Provider adapters must preserve the upstream URL, title, company, location, posting timestamp, and source attribution. If a provider is unavailable, return an explicit empty state instead of placeholder data.
 
-## Domain and release
+## Internet and offline behavior
 
-Host `dist` on Vercel, Netlify, Cloudflare Pages, or another HTTPS host, add the custom domain, and configure SPA fallback to `index.html`. Then update Supabase Authentication → URL Configuration with the final HTTPS Site URL and redirect URL. Add the same environment variables to the hosting provider. Do not commit a generated `.env` file.
+- Skills, career matching, resume drafts, and application tracking remain usable in local storage while offline.
+- Supabase sync, AI calls, and live jobs require internet and a configured authenticated project.
+- No private API key belongs in the frontend.
 
-Before launch verify RLS isolation, account deletion, privacy policy, CSP/security headers, provider rate limits, offline sync conflict handling, service-worker updates, real branded icons, accessibility, and mobile behavior.
+## Deployment and custom domain
 
-Contact: CAREEROSULTIMATE@gmail.com
+Build `dist` and deploy it to an HTTPS static host such as Vercel, Netlify, or Cloudflare Pages. Configure SPA fallback to `index.html`, attach your custom domain at the host, then add the HTTPS domain and callback URL to Supabase Authentication URL Configuration.
+
+## Release checklist
+
+Test signup, login, logout, RLS isolation, offline reload, Edge Functions, provider failures, mobile navigation, CSP/security headers, rate limits, privacy policy, backups, and account deletion before production. Contact: CAREEROSULTIMATE@gmail.com
